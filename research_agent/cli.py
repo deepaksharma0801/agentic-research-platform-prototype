@@ -8,7 +8,7 @@ from rich.table import Table
 from sqlalchemy.exc import OperationalError
 
 from .db import init_db
-from .pipeline import answer_query, ingest_pipeline
+from .pipeline import answer_query, hydrate_citation_metadata, ingest_demo_pipeline, ingest_pipeline
 
 
 app = typer.Typer(help="Agentic AI Research Platform prototype")
@@ -49,6 +49,34 @@ def ingest(
     """Fetch OpenAlex papers, store metadata, create graph links, and embed abstracts."""
     try:
         result = ingest_pipeline(query=query, limit=limit)
+    except Exception as error:
+        _explain_runtime_error(error)
+        raise typer.Exit(1) from error
+    console.print_json(json.dumps(result))
+
+
+@app.command("demo-seed")
+def demo_seed(
+    limit_per_topic: int = typer.Option(
+        15, "--limit-per-topic", "-n", help="Papers to ingest for each demo topic"
+    ),
+) -> None:
+    """Seed a useful demo corpus across healthcare AI topics."""
+    try:
+        result = ingest_demo_pipeline(limit_per_topic=limit_per_topic)
+    except Exception as error:
+        _explain_runtime_error(error)
+        raise typer.Exit(1) from error
+    console.print_json(json.dumps(result))
+
+
+@app.command("hydrate-citations")
+def hydrate_citations(
+    limit: int = typer.Option(50, "--limit", "-n", help="Citation IDs to hydrate"),
+) -> None:
+    """Fetch OpenAlex metadata for citation graph nodes that only have IDs."""
+    try:
+        result = hydrate_citation_metadata(limit=limit)
     except Exception as error:
         _explain_runtime_error(error)
         raise typer.Exit(1) from error

@@ -9,7 +9,7 @@ This prototype demonstrates an end-to-end AI research pipeline:
 5. Store citation links in Neo4j.
 6. Retrieve top-k papers plus citation-related papers.
 7. Use an OpenAI chat model to summarize the retrieved context.
-8. Test everything through a CLI or FastAPI.
+8. Test everything through a CLI, FastAPI, or browser UI.
 
 ## Prerequisites
 
@@ -93,8 +93,20 @@ This command:
 - downloads OpenAlex metadata
 - writes paper metadata to PostgreSQL
 - writes citation relationships to Neo4j
-- embeds abstracts with OpenAI
+- embeds abstracts with the configured provider
 - stores vectors in pgvector
+
+For a stronger demo corpus, seed three healthcare AI topics:
+
+```bash
+python -m research_agent.cli demo-seed --limit-per-topic 15
+```
+
+To enrich citation-only graph nodes with OpenAlex metadata:
+
+```bash
+python -m research_agent.cli hydrate-citations --limit 50
+```
 
 ## 6. Query from the CLI
 
@@ -106,13 +118,17 @@ python -m research_agent.cli query \
 
 The command returns an LLM summary and a table of retrieved papers.
 
-## 7. Query from FastAPI
+## 7. Query from the Web UI and FastAPI
 
 Start the API:
 
 ```bash
 uvicorn research_agent.api:app --reload
 ```
+
+Open the browser UI:
+
+<http://127.0.0.1:8000/>
 
 Open docs:
 
@@ -132,6 +148,33 @@ You can also ingest through the API:
 curl -X POST http://127.0.0.1:8000/ingest \
   -H "Content-Type: application/json" \
   -d '{"query":"machine learning in healthcare","limit":25}'
+```
+
+Demo seeding and citation hydration are also available through the API:
+
+```bash
+curl -X POST http://127.0.0.1:8000/demo-seed \
+  -H "Content-Type: application/json" \
+  -d '{"limit_per_topic":15}'
+
+curl -X POST http://127.0.0.1:8000/hydrate-citations \
+  -H "Content-Type: application/json" \
+  -d '{"limit":50}'
+```
+
+## Demo Flow
+
+```bash
+docker compose up -d
+python -m research_agent.cli init
+python -m research_agent.cli demo-seed --limit-per-topic 15
+uvicorn research_agent.api:app --reload
+```
+
+Then open <http://127.0.0.1:8000/> and search for:
+
+```text
+How are transformers used in biomedicine?
 ```
 
 ## Troubleshooting
@@ -154,6 +197,7 @@ Skip lines that begin with `#`.
 ```text
 research_agent/
   api.py             # FastAPI app
+  static/            # browser UI
   cli.py             # CLI commands
   config.py          # environment-backed settings
   db.py              # SQLAlchemy + pgvector models

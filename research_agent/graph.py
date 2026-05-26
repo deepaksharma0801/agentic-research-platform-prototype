@@ -68,3 +68,17 @@ class CitationGraph:
                 limit=limit,
             )
             return [dict(record) for record in result]
+
+    def unhydrated_paper_ids(self, limit: int = 50) -> list[str]:
+        """Return graph-only paper IDs that do not have OpenAlex metadata yet."""
+        with self.driver.session() as session:
+            result = session.run(
+                """
+                MATCH (p:Paper)
+                WHERE p.title IS NULL OR p.title STARTS WITH "https://openalex.org/"
+                RETURN p.openalex_id AS openalex_id
+                LIMIT $limit
+                """,
+                limit=limit,
+            )
+            return [record["openalex_id"] for record in result]

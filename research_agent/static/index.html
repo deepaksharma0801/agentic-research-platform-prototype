@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic Research Platform</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="query-band">
+        <div>
+          <p class="eyebrow">Agentic Research Platform</p>
+          <h1>Research Assistant</h1>
+        </div>
+        <form id="query-form" class="query-form">
+          <label class="query-label" for="query-input">Query</label>
+          <div class="query-row">
+            <input
+              id="query-input"
+              name="query"
+              type="search"
+              value="How are transformers used in biomedicine?"
+              autocomplete="off"
+              required
+            />
+            <label class="topk-label" for="top-k">Top K</label>
+            <input id="top-k" name="top_k" type="number" min="1" max="20" value="5" />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="status-row" aria-live="polite">
+        <span id="embedding-provider" class="status-pill">embedding: local</span>
+        <span id="summary-provider" class="status-pill">summary: local</span>
+        <span id="result-count" class="status-pill">papers: 0</span>
+        <span id="status-message" class="status-message">Ready</span>
+      </section>
+
+      <section class="summary-band">
+        <h2>Summary</h2>
+        <pre id="summary-output">Run a search to generate a summary.</pre>
+      </section>
+
+      <section class="results-grid">
+        <div class="panel">
+          <h2>Retrieved Papers</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Title</th>
+                  <th>Authors</th>
+                  <th>Distance</th>
+                </tr>
+              </thead>
+              <tbody id="papers-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Citation Related</h2>
+          <div id="related-list" class="related-list"></div>
+        </div>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

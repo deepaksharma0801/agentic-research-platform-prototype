@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
+from urllib.parse import quote
 
 import requests
 
@@ -48,6 +49,20 @@ def fetch_openalex_works(query: str, limit: int = 25) -> list[dict[str, Any]]:
     return response.json().get("results", [])[:limit]
 
 
+def fetch_openalex_work(openalex_id: str) -> dict[str, Any] | None:
+    """Fetch one OpenAlex work by URL or compact ID, returning None if absent."""
+    compact_id = openalex_id.rstrip("/").split("/")[-1]
+    response = requests.get(
+        f"{OPENALEX_WORKS_URL}/{quote(compact_id)}",
+        params={"mailto": get_settings().openalex_email} if get_settings().openalex_email else None,
+        timeout=30,
+    )
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    return response.json()
+
+
 def normalize_openalex_work(work: dict[str, Any]) -> dict[str, Any]:
     authors = [
         authorship.get("author", {}).get("display_name")
@@ -69,6 +84,22 @@ def ingest_openalex(query: str, limit: int = 25) -> list[Paper]:
     """Download OpenAlex papers, store metadata in Postgres, and return rows."""
     init_db()
     works = fetch_openalex_works(query=query, limit=limit)
+    with session_scope() as session:
+        papers = [upsert_paper(session, normalize_openalex_work(work)) for work in works]
+        session.flush()
+        for paper in papers:
+            session.refresh(paper)
+        return papers
+
+
+def ingest_openalex_ids(openalex_ids: Iterable[str]) -> list[Paper]:
+    """Hydrate known OpenAlex IDs into local Postgres metadata where available."""
+    init_db()
+    works = [
+        work
+        for openalex_id in openalex_ids
+        if (work := fetch_openalex_work(openalex_id)) is not None
+    ]
     with session_scope() as session:
         papers = [upsert_paper(session, normalize_openalex_work(work)) for work in works]
         session.flush()

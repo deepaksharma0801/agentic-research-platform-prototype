@@ -12,6 +12,7 @@ from .graph import CitationGraph
 
 @dataclass
 class RetrievedPaper:
+    source: str
     openalex_id: str
     title: str
     abstract: str | None
@@ -41,6 +42,7 @@ def semantic_search(query: str, top_k: int = 5) -> list[RetrievedPaper]:
         ).mappings()
         return [
             RetrievedPaper(
+                source="semantic",
                 openalex_id=row["openalex_id"],
                 title=row["title"],
                 abstract=row["abstract"],
@@ -60,9 +62,10 @@ def hydrate_related_metadata(related_graph_rows: list[dict[str, Any]]) -> list[d
     with session_scope() as session:
         papers = session.query(Paper).filter(Paper.openalex_id.in_(ids)).all()
         hydrated = [
-            {
-                "openalex_id": paper.openalex_id,
-                "title": paper.title,
+                {
+                    "source": "citation",
+                    "openalex_id": paper.openalex_id,
+                    "title": paper.title,
                 "abstract": paper.abstract,
                 "authors": paper.authors or [],
                 "year": paper.year,
@@ -74,6 +77,7 @@ def hydrate_related_metadata(related_graph_rows: list[dict[str, Any]]) -> list[d
         if openalex_id not in known_ids:
             hydrated.append(
                 {
+                    "source": "citation",
                     "openalex_id": openalex_id,
                     "title": row.get("title") or openalex_id,
                     "abstract": None,
