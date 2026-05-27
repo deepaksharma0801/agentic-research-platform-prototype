@@ -5,6 +5,10 @@ const statusMessage = document.querySelector("#status-message");
 const embeddingProvider = document.querySelector("#embedding-provider");
 const summaryProvider = document.querySelector("#summary-provider");
 const resultCount = document.querySelector("#result-count");
+const metricPapers = document.querySelector("#metric-papers");
+const metricRelated = document.querySelector("#metric-related");
+const metricDistance = document.querySelector("#metric-distance");
+const metricMode = document.querySelector("#metric-mode");
 const summaryOutput = document.querySelector("#summary-output");
 const papersBody = document.querySelector("#papers-body");
 const relatedList = document.querySelector("#related-list");
@@ -22,44 +26,79 @@ function compactId(openalexId) {
   return String(openalexId || "").replace("https://openalex.org/", "");
 }
 
+function truncate(value, maxLength) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "No abstract available.";
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
+}
+
+function providerMarkup(label, value) {
+  return `<span>${label}</span><strong>${value || "local"}</strong>`;
+}
+
+function renderMetrics(payload) {
+  const papers = payload.papers || [];
+  const related = payload.related_papers || [];
+  const bestDistance = papers
+    .map((paper) => paper.distance)
+    .filter((distance) => distance !== null && distance !== undefined)
+    .sort((a, b) => a - b)[0];
+
+  metricPapers.textContent = papers.length;
+  metricRelated.textContent = related.length;
+  metricDistance.textContent =
+    bestDistance === undefined ? "—" : Number(bestDistance).toFixed(3);
+  metricMode.textContent = payload.providers?.summary || "local";
+  resultCount.textContent = `${papers.length} papers`;
+}
+
 function renderPapers(papers) {
   papersBody.replaceChildren();
   if (!papers.length) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 4;
-    cell.className = "empty";
-    cell.textContent = "No papers found.";
-    row.appendChild(cell);
-    papersBody.appendChild(row);
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No papers found.";
+    papersBody.appendChild(empty);
     return;
   }
 
-  for (const paper of papers) {
-    const row = document.createElement("tr");
-    const year = document.createElement("td");
-    const title = document.createElement("td");
-    const authors = document.createElement("td");
-    const distance = document.createElement("td");
-    const titleText = document.createElement("span");
-    const idText = document.createElement("span");
+  papers.forEach((paper, index) => {
+    const row = document.createElement("article");
+    const rank = document.createElement("div");
+    const body = document.createElement("div");
+    const title = document.createElement("span");
+    const meta = document.createElement("div");
+    const id = document.createElement("div");
+    const abstract = document.createElement("p");
+    const distance = document.createElement("div");
+    const distanceLabel = document.createElement("span");
+    const distanceValue = document.createElement("strong");
 
-    titleText.className = "paper-title";
-    titleText.textContent = paper.title || "Untitled paper";
-    idText.className = "paper-id";
-    idText.textContent = compactId(paper.openalex_id);
+    row.className = "paper-row";
+    rank.className = "rank-badge";
+    body.className = "paper-body";
+    title.className = "paper-title";
+    meta.className = "paper-meta";
+    id.className = "paper-id";
+    abstract.className = "paper-abstract";
+    distance.className = "distance-block";
 
-    year.textContent = text(paper.year);
-    title.append(titleText, idText);
-    authors.textContent = (paper.authors || []).slice(0, 3).join(", ") || "Unknown";
-    distance.textContent =
+    rank.textContent = String(index + 1).padStart(2, "0");
+    title.textContent = paper.title || "Untitled paper";
+    meta.textContent = `${text(paper.year)} · ${(paper.authors || []).slice(0, 4).join(", ") || "Unknown authors"}`;
+    id.textContent = compactId(paper.openalex_id);
+    abstract.textContent = truncate(paper.abstract, 330);
+    distanceLabel.textContent = "Distance";
+    distanceValue.textContent =
       paper.distance === null || paper.distance === undefined
-        ? ""
+        ? "—"
         : Number(paper.distance).toFixed(4);
 
-    row.append(year, title, authors, distance);
+    body.append(title, meta, id, abstract);
+    distance.append(distanceLabel, distanceValue);
+    row.append(rank, body, distance);
     papersBody.appendChild(row);
-  }
+  });
 }
 
 function renderRelated(papers) {
@@ -89,7 +128,7 @@ async function runQuery(event) {
   event.preventDefault();
   const button = form.querySelector("button");
   button.disabled = true;
-  setStatus("Searching...");
+  setStatus("Running retrieval...");
 
   try {
     const response = await fetch("/query", {
@@ -105,10 +144,10 @@ async function runQuery(event) {
       throw new Error(payload.detail || "Query failed.");
     }
 
-    embeddingProvider.textContent = `embedding: ${payload.providers.embedding}`;
-    summaryProvider.textContent = `summary: ${payload.providers.summary}`;
-    resultCount.textContent = `papers: ${payload.counts.papers}`;
+    embeddingProvider.innerHTML = providerMarkup("Embedding", payload.providers.embedding);
+    summaryProvider.innerHTML = providerMarkup("Summary", payload.providers.summary);
     summaryOutput.textContent = payload.summary || "No summary returned.";
+    renderMetrics(payload);
     renderPapers(payload.papers || []);
     renderRelated(payload.related_papers || []);
     setStatus("Ready");

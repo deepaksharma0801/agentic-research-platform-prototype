@@ -7,66 +7,131 @@
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="query-band">
-        <div>
-          <p class="eyebrow">Agentic Research Platform</p>
-          <h1>Research Assistant</h1>
-        </div>
-        <form id="query-form" class="query-form">
-          <label class="query-label" for="query-input">Query</label>
-          <div class="query-row">
-            <input
-              id="query-input"
-              name="query"
-              type="search"
-              value="How are transformers used in biomedicine?"
-              autocomplete="off"
-              required
-            />
-            <label class="topk-label" for="top-k">Top K</label>
-            <input id="top-k" name="top_k" type="number" min="1" max="20" value="5" />
-            <button type="submit">Search</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="status-row" aria-live="polite">
-        <span id="embedding-provider" class="status-pill">embedding: local</span>
-        <span id="summary-provider" class="status-pill">summary: local</span>
-        <span id="result-count" class="status-pill">papers: 0</span>
-        <span id="status-message" class="status-message">Ready</span>
-      </section>
-
-      <section class="summary-band">
-        <h2>Summary</h2>
-        <pre id="summary-output">Run a search to generate a summary.</pre>
-      </section>
-
-      <section class="results-grid">
-        <div class="panel">
-          <h2>Retrieved Papers</h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Title</th>
-                  <th>Authors</th>
-                  <th>Distance</th>
-                </tr>
-              </thead>
-              <tbody id="papers-body"></tbody>
-            </table>
+    <div class="app-frame">
+      <aside class="sidebar" aria-label="Workspace">
+        <div class="brand-lockup">
+          <div class="brand-mark">AR</div>
+          <div>
+            <div class="brand-name">ResearchOS</div>
+            <div class="brand-subtitle">Agentic literature desk</div>
           </div>
         </div>
 
-        <div class="panel">
-          <h2>Citation Related</h2>
-          <div id="related-list" class="related-list"></div>
+        <nav class="nav-stack" aria-label="Sections">
+          <a class="nav-item active" href="/">
+            <span class="nav-glyph">⌘</span>
+            Search
+          </a>
+          <a class="nav-item" href="/docs">
+            <span class="nav-glyph">⌁</span>
+            API
+          </a>
+        </nav>
+
+        <div class="sidebar-panel">
+          <span class="panel-label">Providers</span>
+          <div id="embedding-provider" class="provider-row">
+            <span>Embedding</span>
+            <strong>local</strong>
+          </div>
+          <div id="summary-provider" class="provider-row">
+            <span>Summary</span>
+            <strong>local</strong>
+          </div>
         </div>
-      </section>
-    </main>
+
+        <div class="sidebar-panel compact">
+          <span class="panel-label">Status</span>
+          <div id="status-message" class="status-message" aria-live="polite">Ready</div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Agentic AI Research Platform</p>
+            <h1>Evidence Console</h1>
+          </div>
+          <div class="topbar-actions">
+            <a class="ghost-button" href="/docs">OpenAPI</a>
+            <span class="build-pill">Prototype 0.2</span>
+          </div>
+        </header>
+
+        <section class="command-surface" aria-label="Research query">
+          <form id="query-form" class="query-form">
+            <label class="field-label" for="query-input">Research question</label>
+            <div class="query-row">
+              <input
+                id="query-input"
+                name="query"
+                type="search"
+                value="How are transformers used in biomedicine?"
+                autocomplete="off"
+                required
+              />
+              <div class="top-k-control">
+                <label for="top-k">Top K</label>
+                <input id="top-k" name="top_k" type="number" min="1" max="20" value="5" />
+              </div>
+              <button type="submit">Run Search</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="metrics-grid" aria-label="Retrieval metrics">
+          <div class="metric-tile">
+            <span>Retrieved</span>
+            <strong id="metric-papers">0</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Citation Neighbors</span>
+            <strong id="metric-related">0</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Best Distance</span>
+            <strong id="metric-distance">—</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Mode</span>
+            <strong id="metric-mode">local</strong>
+          </div>
+        </section>
+
+        <section class="analysis-layout">
+          <article class="summary-panel">
+            <div class="section-header">
+              <div>
+                <span class="section-kicker">Synthesis</span>
+                <h2>Generated Summary</h2>
+              </div>
+              <span id="result-count" class="small-pill">0 papers</span>
+            </div>
+            <pre id="summary-output">Run a search to generate a summary.</pre>
+          </article>
+
+          <aside class="citation-panel">
+            <div class="section-header slim">
+              <div>
+                <span class="section-kicker">Graph</span>
+                <h2>Citation Related</h2>
+              </div>
+            </div>
+            <div id="related-list" class="related-list"></div>
+          </aside>
+        </section>
+
+        <section class="results-panel">
+          <div class="section-header">
+            <div>
+              <span class="section-kicker">Semantic Retrieval</span>
+              <h2>Ranked Papers</h2>
+            </div>
+          </div>
+          <div id="papers-body" class="paper-list"></div>
+        </section>
+      </main>
+    </div>
     <script src="/static/app.js"></script>
   </body>
 </html>
