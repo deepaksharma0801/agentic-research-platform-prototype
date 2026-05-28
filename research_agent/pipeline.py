@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .config import get_settings
+from .db import corpus_stats
 from .embeddings import embed_unembedded_papers
 from .graph import CitationGraph
 from .ingestion import ingest_openalex, ingest_openalex_ids, paper_graph_payloads
@@ -67,6 +68,30 @@ def hydrate_citation_metadata(limit: int = 50) -> dict[str, int]:
         "candidate_ids": len(ids),
         "papers_hydrated": len(papers),
         "papers_embedded": embed_unembedded_papers(limit=len(papers)),
+    }
+
+
+def dashboard_stats() -> dict[str, Any]:
+    """Summarize database, graph, vector, and model provider state."""
+    graph = CitationGraph()
+    try:
+        graph_counts = graph.graph_stats()
+    finally:
+        graph.close()
+
+    settings = get_settings()
+    return {
+        "corpus": corpus_stats(),
+        "graph": graph_counts,
+        "providers": {
+            "embedding": settings.embedding_provider,
+            "summary": settings.summary_provider,
+        },
+        "services": {
+            "postgres": "connected",
+            "pgvector": "enabled",
+            "neo4j": "connected",
+        },
     }
 
 

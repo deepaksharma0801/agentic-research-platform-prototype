@@ -12,6 +12,7 @@ from sqlalchemy.exc import OperationalError
 
 from .pipeline import (
     answer_query,
+    dashboard_stats,
     hydrate_citation_metadata,
     ingest_demo_pipeline,
     ingest_pipeline,
@@ -74,6 +75,14 @@ def index() -> FileResponse:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/stats")
+def stats() -> dict:
+    try:
+        return dashboard_stats()
+    except Exception as error:
+        _raise_http_error(error)
 
 
 @app.post("/ingest")

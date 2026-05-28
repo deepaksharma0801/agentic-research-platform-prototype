@@ -82,3 +82,18 @@ class CitationGraph:
                 limit=limit,
             )
             return [record["openalex_id"] for record in result]
+
+    def graph_stats(self) -> dict[str, int]:
+        """Return dashboard metrics for Neo4j citation graph state."""
+        with self.driver.session() as session:
+            result = session.run(
+                """
+                MATCH (p:Paper)
+                WITH count(p) AS nodes
+                OPTIONAL MATCH ()-[r:CITES]->()
+                RETURN nodes, count(r) AS citations
+                """
+            ).single()
+            if result is None:
+                return {"nodes": 0, "citations": 0}
+            return {"nodes": result["nodes"], "citations": result["citations"]}

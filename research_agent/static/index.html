@@ -3,130 +3,194 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agentic Research Platform</title>
+    <title>ResearchOS Command Center</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <div class="app-frame">
-      <aside class="sidebar" aria-label="Workspace">
-        <div class="brand-lockup">
-          <div class="brand-mark">AR</div>
+    <div class="app-shell">
+      <aside class="rail">
+        <div class="brand">
+          <div class="brand-mark">R</div>
           <div>
-            <div class="brand-name">ResearchOS</div>
-            <div class="brand-subtitle">Agentic literature desk</div>
+            <strong>ResearchOS</strong>
+            <span>AI evidence infrastructure</span>
           </div>
         </div>
 
-        <nav class="nav-stack" aria-label="Sections">
-          <a class="nav-item active" href="/">
-            <span class="nav-glyph">⌘</span>
-            Search
-          </a>
-          <a class="nav-item" href="/docs">
-            <span class="nav-glyph">⌁</span>
-            API
-          </a>
+        <nav class="nav">
+          <a class="active" href="#overview">Overview</a>
+          <a href="#search">Semantic Search</a>
+          <a href="#database">Database</a>
+          <a href="/docs">API Docs</a>
         </nav>
 
-        <div class="sidebar-panel">
-          <span class="panel-label">Providers</span>
-          <div id="embedding-provider" class="provider-row">
-            <span>Embedding</span>
+        <section class="rail-card">
+          <span class="rail-label">Runtime</span>
+          <div id="embedding-provider" class="runtime-row">
+            <span>Embeddings</span>
             <strong>local</strong>
           </div>
-          <div id="summary-provider" class="provider-row">
+          <div id="summary-provider" class="runtime-row">
             <span>Summary</span>
             <strong>local</strong>
           </div>
-        </div>
+          <div class="runtime-row">
+            <span>Vector Store</span>
+            <strong>pgvector</strong>
+          </div>
+          <div class="runtime-row">
+            <span>Graph Store</span>
+            <strong>Neo4j</strong>
+          </div>
+        </section>
 
-        <div class="sidebar-panel compact">
-          <span class="panel-label">Status</span>
+        <section class="rail-card status-card">
+          <span class="rail-label">System</span>
           <div id="status-message" class="status-message" aria-live="polite">Ready</div>
-        </div>
+        </section>
       </aside>
 
-      <main class="workspace">
-        <header class="topbar">
+      <main class="main">
+        <header class="hero" id="overview">
           <div>
             <p class="eyebrow">Agentic AI Research Platform</p>
-            <h1>Evidence Console</h1>
+            <h1>Research Intelligence Command Center</h1>
+            <p class="hero-copy">
+              OpenAlex ingestion, PostgreSQL metadata, pgvector semantic retrieval,
+              Neo4j citation expansion, and AI synthesis in one operating view.
+            </p>
           </div>
-          <div class="topbar-actions">
-            <a class="ghost-button" href="/docs">OpenAPI</a>
-            <span class="build-pill">Prototype 0.2</span>
+          <div class="hero-actions">
+            <button id="refresh-stats" type="button" class="secondary-button">Refresh Stats</button>
+            <button id="seed-demo" type="button" class="secondary-button">Seed Demo Corpus</button>
+            <button id="hydrate-citations" type="button" class="secondary-button">Hydrate Citations</button>
           </div>
         </header>
 
-        <section class="command-surface" aria-label="Research query">
-          <form id="query-form" class="query-form">
-            <label class="field-label" for="query-input">Research question</label>
-            <div class="query-row">
-              <input
-                id="query-input"
-                name="query"
-                type="search"
-                value="How are transformers used in biomedicine?"
-                autocomplete="off"
-                required
-              />
-              <div class="top-k-control">
-                <label for="top-k">Top K</label>
-                <input id="top-k" name="top_k" type="number" min="1" max="20" value="5" />
+        <section class="kpi-grid" aria-label="Database metrics">
+          <article class="kpi-card primary">
+            <span>Total Records</span>
+            <strong id="stat-records">0</strong>
+            <em>PostgreSQL papers table</em>
+          </article>
+          <article class="kpi-card">
+            <span>Embedded Records</span>
+            <strong id="stat-embedded">0</strong>
+            <em id="stat-coverage">0% vector coverage</em>
+          </article>
+          <article class="kpi-card">
+            <span>Citation Graph</span>
+            <strong id="stat-graph">0</strong>
+            <em id="stat-citations">0 citation edges</em>
+          </article>
+          <article class="kpi-card">
+            <span>Year Span</span>
+            <strong id="stat-years">--</strong>
+            <em>Publication range</em>
+          </article>
+        </section>
+
+        <section class="dashboard-grid" id="database">
+          <article class="panel category-panel">
+            <div class="section-head">
+              <div>
+                <span>Corpus Intelligence</span>
+                <h2>Category Breakdown</h2>
               </div>
-              <button type="submit">Run Search</button>
+              <small>Derived from titles and abstracts</small>
             </div>
+            <div id="category-list" class="category-list"></div>
+          </article>
+
+          <article class="panel stack-panel">
+            <div class="section-head">
+              <div>
+                <span>Pipeline Stack</span>
+                <h2>Connected Systems</h2>
+              </div>
+            </div>
+            <div class="stack-map">
+              <div class="stack-node">
+                <strong>OpenAlex</strong>
+                <span>metadata source</span>
+              </div>
+              <div class="stack-node">
+                <strong>PostgreSQL</strong>
+                <span id="postgres-status">connected</span>
+              </div>
+              <div class="stack-node">
+                <strong>pgvector</strong>
+                <span id="pgvector-status">enabled</span>
+              </div>
+              <div class="stack-node">
+                <strong>Neo4j</strong>
+                <span id="neo4j-status">connected</span>
+              </div>
+              <div class="stack-node accent">
+                <strong>ChatGPT Layer</strong>
+                <span>summary + reasoning</span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="search-console" id="search">
+          <div class="section-head">
+            <div>
+              <span>Semantic Retrieval</span>
+              <h2>Ask the Research Database</h2>
+            </div>
+            <small id="result-count">0 papers</small>
+          </div>
+
+          <form id="query-form" class="query-form">
+            <input
+              id="query-input"
+              name="query"
+              type="search"
+              value="How are transformers used in biomedicine?"
+              autocomplete="off"
+              required
+            />
+            <label class="top-k-control" for="top-k">
+              <span>Top K</span>
+              <input id="top-k" name="top_k" type="number" min="1" max="20" value="5" />
+            </label>
+            <button type="submit">Run Search</button>
           </form>
         </section>
 
-        <section class="metrics-grid" aria-label="Retrieval metrics">
-          <div class="metric-tile">
-            <span>Retrieved</span>
-            <strong id="metric-papers">0</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Citation Neighbors</span>
-            <strong id="metric-related">0</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Best Distance</span>
-            <strong id="metric-distance">—</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Mode</span>
-            <strong id="metric-mode">local</strong>
-          </div>
-        </section>
-
-        <section class="analysis-layout">
-          <article class="summary-panel">
-            <div class="section-header">
+        <section class="analysis-grid">
+          <article class="panel summary-panel">
+            <div class="section-head">
               <div>
-                <span class="section-kicker">Synthesis</span>
-                <h2>Generated Summary</h2>
+                <span>AI Synthesis</span>
+                <h2>Executive Summary</h2>
               </div>
-              <span id="result-count" class="small-pill">0 papers</span>
+              <small id="metric-distance">best distance --</small>
             </div>
             <pre id="summary-output">Run a search to generate a summary.</pre>
           </article>
 
-          <aside class="citation-panel">
-            <div class="section-header slim">
+          <article class="panel graph-panel">
+            <div class="section-head">
               <div>
-                <span class="section-kicker">Graph</span>
-                <h2>Citation Related</h2>
+                <span>Neo4j Expansion</span>
+                <h2>Citation Neighbors</h2>
               </div>
+              <small id="metric-related">0 related</small>
             </div>
             <div id="related-list" class="related-list"></div>
-          </aside>
+          </article>
         </section>
 
-        <section class="results-panel">
-          <div class="section-header">
+        <section class="panel results-panel">
+          <div class="section-head">
             <div>
-              <span class="section-kicker">Semantic Retrieval</span>
-              <h2>Ranked Papers</h2>
+              <span>Ranked Evidence</span>
+              <h2>Retrieved Papers</h2>
             </div>
+            <small id="metric-papers">0 retrieved</small>
           </div>
           <div id="papers-body" class="paper-list"></div>
         </section>

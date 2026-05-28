@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import Generator, Iterable, Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Integer, String, Text, create_engine, text
+from sqlalchemy import Integer, String, Text, create_engine, func, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
@@ -89,3 +89,58 @@ def papers_missing_embeddings(session: Session, limit: int = 100) -> Iterable[Pa
         .limit(limit)
         .all()
     )
+
+
+def classify_topic(title: str | None, abstract: str | None) -> str:
+    """Derive a demo-friendly category from available paper text."""
+    text_value = f"{title or ''} {abstract or ''}".lower()
+    categories = [
+        ("biomedicine", ["biomed", "medical image", "clinical", "medicine", "disease"]),
+        ("federated learning", ["federated", "privacy", "distributed learning"]),
+        ("explainability", ["explainable", "explainability", "xai", "interpretability"]),
+        ("wearables", ["wearable", "sensor", "iot"]),
+        ("healthcare ml", ["healthcare", "health care", "machine learning", "artificial intelligence"]),
+    ]
+    for label, keywords in categories:
+        if any(keyword in text_value for keyword in keywords):
+            return label
+    return "general research"
+
+
+def corpus_stats() -> dict:
+    """Return dashboard metrics for Postgres and pgvector corpus state."""
+    with session_scope() as session:
+        total = session.query(func.count(Paper.id)).scalar() or 0
+        embedded = session.query(func.count(Paper.id)).filter(Paper.embedding.is_not(None)).scalar() or 0
+        with_abstracts = (
+            session.query(func.count(Paper.id)).filter(Paper.abstract.is_not(None)).scalar() or 0
+        )
+        min_year = session.query(func.min(Paper.year)).scalar()
+        max_year = session.query(func.max(Paper.year)).scalar()
+        rows = session.query(Paper.title, Paper.abstract, Paper.year).all()
+
+    category_counts: dict[str, int] = {}
+    year_counts: dict[int, int] = {}
+    for title, abstract, year in rows:
+        category = classify_topic(title, abstract)
+        category_counts[category] = category_counts.get(category, 0) + 1
+        if year:
+            year_counts[year] = year_counts.get(year, 0) + 1
+
+    categories = [
+        {"name": name, "count": count}
+        for name, count in sorted(category_counts.items(), key=lambda item: item[1], reverse=True)
+    ]
+    years = [
+        {"year": year, "count": count}
+        for year, count in sorted(year_counts.items(), key=lambda item: item[0], reverse=True)[:8]
+    ]
+    return {
+        "papers": total,
+        "embedded_papers": embedded,
+        "papers_with_abstracts": with_abstracts,
+        "embedding_coverage": round(embedded / total, 3) if total else 0,
+        "year_range": {"min": min_year, "max": max_year},
+        "categories": categories,
+        "recent_years": years,
+    }
